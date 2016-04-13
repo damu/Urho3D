@@ -928,14 +928,28 @@ bool Image::FlipHorizontal()
         SharedArrayPtr<unsigned char> newData(new unsigned char[width_ * height_ * components_]);
         unsigned rowSize = width_ * components_;
 
-        for (int y = 0; y < height_; ++y)
+        if(components_==4)
         {
-            unsigned index = y * rowSize;
-            unsigned index_end = index + width_ * components_;
-            unsigned index_reversed = index_end - components_;
-            for (; index < index_end; index+=components_, index_reversed-=components_)
-                for (unsigned c = 0; c < components_; ++c)
-                    newData[index + c] = data_[index_reversed + c];
+            for (int y = 0; y < height_; ++y)
+            {
+                unsigned* posNew = (unsigned*) newData.Get() + y * width_;
+                unsigned* posEndNew = posNew + width_;
+                unsigned* posOld = (unsigned*) data_.Get() + y * width_ + width_ - 1;
+                for (; posNew < posEndNew; ++posNew, --posOld)
+                    *posNew=*posOld;
+            }
+        }
+        else
+        {
+            for (int y = 0; y < height_; ++y)
+            {
+                unsigned index = y * rowSize;
+                unsigned index_end = index + width_ * components_;
+                unsigned index_reversed = index_end - components_;
+                for (; index < index_end; index+=components_, index_reversed-=components_)
+                    for (unsigned c = 0; c < components_; ++c)
+                        newData[index + c] = data_[index_reversed + c];
+            }
         }
 
         data_ = newData;
